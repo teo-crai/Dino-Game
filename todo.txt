@@ -1,15 +1,13 @@
-Add a score counter
+Add a score counter 1*
 
-Spawn multiple cacti at random intervals
+Spawn multiple cacti at random intervals 5
 
-Different object types
+Create a game over screen 3*
 
-Create a game over screen
+Improve graphics (add texture to sky, ground) 7
 
-Improve graphics (color at 10k score, alternating day and night)
+Start game screen 4
 
-Start game screen
+Save high scores between runs (file I/O) 2*
 
-Save high scores between runs (file I/O)
-
-Multiplayer
+Multiplayer 6

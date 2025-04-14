@@ -229,8 +229,24 @@ int main(int agrc, char *argv[])
         score++;
         scoreTimer = 0;
         }
-
-        renderGame(renderer, &dino, &obs);
+        
+        long long tempscore=0;
+        if (score%700==0)
+            tempscore=score;
+        if (score>=10000 && score<11000)
+        {
+            renderGameColored(renderer, &dino, &obs);
+        }
+        else
+        {
+            if (score<tempscore+700)
+            {
+                if(tempscore%1400==0)
+                    renderGame(renderer, &dino, &obs);
+                else
+                    renderGameReversed(renderer, &dino, &obs);
+            }
+        }
 
         SDL_Delay(16); // ~60 FPS
     }
