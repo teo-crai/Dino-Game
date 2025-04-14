@@ -1,0 +1,15 @@
+Add a score counter
+
+Spawn multiple cacti at random intervals
+
+Different object types
+
+Create a game over screen
+
+Improve graphics (color at 10k score, alternating day and night)
+
+Start game screen
+
+Save high scores between runs (file I/O)
+
+Multiplayer

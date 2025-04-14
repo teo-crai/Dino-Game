@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <time.h>
+#include <stdlib.h>
 #include <SDL3/SDL.h>
 
 #define WINDOW_WIDTH 800
@@ -7,9 +9,11 @@
 #define GROUND_Y (WINDOW_HEIGHT - 50)
 #define GRAVITY 0.5f
 #define JUMP_STRENGTH -12.0f
-#define OBSTACLE_WIDTH 20
-#define OBSTACLE_HEIGHT 50
 #define OBSTACLE_SPEED 5
+
+int score = 0;
+int highScore = 0;
+int scoreTimer = 0; 
 
 typedef struct {
     float x, y;
@@ -17,9 +21,16 @@ typedef struct {
     bool isJumping;
 } Dinosaur;
 
+typedef enum {
+    OBSTACLE_CACTUS,
+    OBSTACLE_ROCK
+} ObstacleType;
+
 typedef struct {
     float x, y;
     bool active;
+    int width, height;
+    ObstacleType type;
 } Obstacle;
 
 void initGame(Dinosaur *dino, Obstacle *obs) {
@@ -27,9 +38,21 @@ void initGame(Dinosaur *dino, Obstacle *obs) {
     dino->y = GROUND_Y;
     dino->velocity = 0.0f;
     dino->isJumping = false;
-
     obs->x = WINDOW_WIDTH;
-    obs->y = GROUND_Y - OBSTACLE_HEIGHT;
+    int type = rand() % 2; // 0 or 1
+    obs->type = (ObstacleType)type;
+    if (obs->type == OBSTACLE_CACTUS) 
+    {
+        obs->width = 20;
+        obs->height = 50 + rand() % 30; // 50–80 tall
+    } 
+    else 
+    {
+        obs->width = 40 + rand() % 30; // 40–70 wide
+        obs->height = 20 + rand() % 10; // 20–30 tall
+    }
+
+    obs->y = GROUND_Y - obs->height;
     obs->active = true;
 }
 
@@ -45,7 +68,7 @@ void handleInput(SDL_Event *event, Dinosaur *dino)
 }
 
 void updateGame(Dinosaur *dino, Obstacle *obs) {
-    // Update dinosaur position
+    // Updates dinosaur position
     dino->velocity += GRAVITY;
     dino->y += dino->velocity;
     if (dino->y >= GROUND_Y) {
@@ -54,22 +77,31 @@ void updateGame(Dinosaur *dino, Obstacle *obs) {
         dino->velocity = 0.0f;
     }
 
-    // Update obstacle position
-    if (obs->active) {
-        obs->x -= OBSTACLE_SPEED;
-        if (obs->x + OBSTACLE_WIDTH < 0) {
-            obs->x = WINDOW_WIDTH;
-            obs->active = true;
+    // Updates obstacle position
+    if (obs->x + obs->width < 0) {
+        obs->x = WINDOW_WIDTH;
+        int type = rand() % 2;
+        obs->type = (ObstacleType)type;
+        if (obs->type == OBSTACLE_CACTUS) 
+        {
+            obs->width = 20;
+            obs->height = 50 + rand() % 30;
+        } 
+        else 
+        {
+            obs->width = 40 + rand() % 30;
+            obs->height = 20 + rand() % 10;
         }
+        obs->y = GROUND_Y - obs->height;
     }
 }
 
 bool checkCollision(Dinosaur *dino, Obstacle *obs) {
     if (obs->active &&
         dino->x + 50 > obs->x &&
-        dino->x < obs->x + OBSTACLE_WIDTH &&
+        dino->x < obs->x + obs->width &&
         dino->y + 50 > obs->y &&
-        dino->y < obs->y + OBSTACLE_HEIGHT) {
+        dino->y < obs->y + obs->height) {
         return true;
     }
     return false;
@@ -80,26 +112,76 @@ void renderGame(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
     SDL_RenderClear(renderer);
 
     // Draw ground
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //ground
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Black ground
     SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &groundRect);
 
     // Draw dinosaur
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //dinosaur
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Back dinosaur
     SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
     SDL_RenderFillRect(renderer, &dinoRect);
 
     // Draw obstacle
     if (obs->active) {
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //obstacle
-        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, OBSTACLE_WIDTH, OBSTACLE_HEIGHT};
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Black obstacle
+        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
+        SDL_RenderFillRect(renderer, &obsRect);
+    }
+
+    SDL_RenderPresent(renderer);
+}
+void renderGameReversed(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
+    SDL_SetRenderDrawColor(renderer, 0, 0,0, 255); // Black background
+    SDL_RenderClear(renderer);
+
+    // Draw ground
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White ground
+    SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
+    SDL_RenderFillRect(renderer, &groundRect);
+
+    // Draw dinosaur
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White dinosaur
+    SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
+    SDL_RenderFillRect(renderer, &dinoRect);
+
+    // Draw obstacle
+    if (obs->active) {
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White obstacle
+        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
+        SDL_RenderFillRect(renderer, &obsRect);
+    }
+
+    SDL_RenderPresent(renderer);
+}
+void renderGameColored(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // Blue background
+    SDL_RenderClear(renderer);
+
+    // Draw ground
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Green ground
+    SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
+    SDL_RenderFillRect(renderer, &groundRect);
+
+    // Draw dinosaur
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Brown dinosaur
+    SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
+    SDL_RenderFillRect(renderer, &dinoRect);
+
+    // Draw obstacle
+    if (obs->active) 
+    {
+        if (obs->type == OBSTACLE_CACTUS)
+            SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //Green cacti
+        else
+            SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); //Gray stone
+        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
         SDL_RenderFillRect(renderer, &obsRect);
     }
 
     SDL_RenderPresent(renderer);
 }
 
-int main(int agrc, char *argv)
+int main(int agrc, char *argv[])
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0) {
         SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
@@ -116,6 +198,7 @@ int main(int agrc, char *argv)
 
     Dinosaur dino;
     Obstacle obs;
+    srand((unsigned int)time(NULL));
     initGame(&dino, &obs);
 
     bool running = true;
@@ -133,7 +216,18 @@ int main(int agrc, char *argv)
 
         if (checkCollision(&dino, &obs)) {
             // Handle collision (e.g., reset game)
+            if (score > highScore) {
+                highScore = score;
+            }
+            score = 0;
+            scoreTimer = 0;
             initGame(&dino, &obs);
+        }
+
+        scoreTimer++;
+        if (scoreTimer >= 10) {  // Adjust this for faster/slower score rate
+        score++;
+        scoreTimer = 0;
         }
 
         renderGame(renderer, &dino, &obs);
