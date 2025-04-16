@@ -1,6 +1,6 @@
 Add a score counter 1*
 
-Spawn multiple cacti at random intervals 5
+Obs array 5
 
 Create a game over screen 3*
 

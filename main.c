@@ -1,19 +1,22 @@
+//#define SDL_MAIN_USE_CALLBACKS
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
 #include <stdlib.h>
 #include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 #define WINDOW_WIDTH 800
 #define WINDOW_HEIGHT 400
 #define GROUND_Y (WINDOW_HEIGHT - 50)
 #define GRAVITY 0.5f
-#define JUMP_STRENGTH -12.0f
-#define OBSTACLE_SPEED 5
+#define JUMP_STRENGTH -13.5f
 
 int score = 0;
 int highScore = 0;
-int scoreTimer = 0; 
+int scoreTimer = 0;
+long long tempscore=0;
+float obstacleSpeed = 5.0f; 
 
 typedef struct {
     float x, y;
@@ -77,6 +80,8 @@ void updateGame(Dinosaur *dino, Obstacle *obs) {
         dino->velocity = 0.0f;
     }
 
+    obs->x -= obstacleSpeed; //moves obs to the left
+
     // Updates obstacle position
     if (obs->x + obs->width < 0) {
         obs->x = WINDOW_WIDTH;
@@ -113,18 +118,18 @@ void renderGame(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
 
     // Draw ground
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Black ground
-    SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
+    SDL_FRect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &groundRect);
 
     // Draw dinosaur
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Back dinosaur
-    SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
+    SDL_FRect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
     SDL_RenderFillRect(renderer, &dinoRect);
 
     // Draw obstacle
     if (obs->active) {
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Black obstacle
-        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
+        SDL_FRect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
         SDL_RenderFillRect(renderer, &obsRect);
     }
 
@@ -136,18 +141,18 @@ void renderGameReversed(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
 
     // Draw ground
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White ground
-    SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
+    SDL_FRect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &groundRect);
 
     // Draw dinosaur
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White dinosaur
-    SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
+    SDL_FRect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
     SDL_RenderFillRect(renderer, &dinoRect);
 
     // Draw obstacle
     if (obs->active) {
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); //White obstacle
-        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
+        SDL_FRect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
         SDL_RenderFillRect(renderer, &obsRect);
     }
 
@@ -159,12 +164,12 @@ void renderGameColored(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
 
     // Draw ground
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Green ground
-    SDL_Rect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
+    SDL_FRect groundRect = {0, GROUND_Y, WINDOW_WIDTH, 50};
     SDL_RenderFillRect(renderer, &groundRect);
 
     // Draw dinosaur
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); //Brown dinosaur
-    SDL_Rect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
+    SDL_FRect dinoRect = {(int)dino->x, (int)dino->y, 50, 50};
     SDL_RenderFillRect(renderer, &dinoRect);
 
     // Draw obstacle
@@ -174,16 +179,17 @@ void renderGameColored(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
             SDL_SetRenderDrawColor(renderer, 0, 255, 0, 255); //Green cacti
         else
             SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255); //Gray stone
-        SDL_Rect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
+        SDL_FRect obsRect = {(int)obs->x, (int)obs->y, obs->width, obs->height};
         SDL_RenderFillRect(renderer, &obsRect);
     }
 
     SDL_RenderPresent(renderer);
 }
 
-int main(int agrc, char *argv[])
+int main(int argc, char *argv[])
 {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    printf("SDL version: %d.%d.%d\n", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION); 
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         SDL_Log("Unable to initialize SDL: %s", SDL_GetError());
         return 1;
     }
@@ -230,7 +236,10 @@ int main(int agrc, char *argv[])
         scoreTimer = 0;
         }
         
-        long long tempscore=0;
+        obstacleSpeed = 5.0f + (score / 200.0f); //increases speed for every 200 pts, adjust 200.0f to modify speed
+        if (obstacleSpeed > 100.0f)
+                obstacleSpeed = 100.0f;
+
         if (score%700==0)
             tempscore=score;
         if (score>=10000 && score<11000)

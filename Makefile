@@ -1,2 +1,7 @@
-all:
-		gcc -I src/include -L src/lib -o main main.c -lmingw32 -lSDL3main -lSDL3
+compile: build run
+
+build:
+	gcc main.c -main.exe -lSDL3
+
+run:
+	./main.exe
