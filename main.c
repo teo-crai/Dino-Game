@@ -1,4 +1,3 @@
-//#define SDL_MAIN_USE_CALLBACKS
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
@@ -36,9 +35,14 @@ typedef struct {
     ObstacleType type;
 } Obstacle;
 
+typedef enum {
+    GAME_RUNNING,
+    GAME_OVER
+} GameState;
+
 void initGame(Dinosaur *dino, Obstacle *obs) {
     dino->x = 50;
-    dino->y = GROUND_Y;
+    dino->y = GROUND_Y - 50;
     dino->velocity = 0.0f;
     dino->isJumping = false;
     obs->x = WINDOW_WIDTH;
@@ -72,12 +76,15 @@ void handleInput(SDL_Event *event, Dinosaur *dino)
 
 void updateGame(Dinosaur *dino, Obstacle *obs) {
     // Updates dinosaur position
-    dino->velocity += GRAVITY;
-    dino->y += dino->velocity;
-    if (dino->y >= GROUND_Y) {
-        dino->y = GROUND_Y;
-        dino->isJumping = false;
-        dino->velocity = 0.0f;
+    if (dino->isJumping) {
+        dino->velocity += GRAVITY;
+        dino->y += dino->velocity;
+    
+        if (dino->y >= GROUND_Y) {
+            dino->y = GROUND_Y - 50;
+            dino->isJumping = false;
+            dino->velocity = 0.0f;
+        }
     }
 
     obs->x -= obstacleSpeed; //moves obs to the left
@@ -111,7 +118,16 @@ bool checkCollision(Dinosaur *dino, Obstacle *obs) {
     }
     return false;
 }
-
+/*SDL_Texture* loadTexture(const char* path, SDL_Renderer* renderer) {
+    SDL_Surface* surface = SDL_image(path); // use SDL_image if using PNG
+    if (!surface) {
+        SDL_Log("Failed to load surface: %s", SDL_GetError());
+        return NULL;
+    }
+    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_DestroySurface(surface);
+    return texture;
+}*/
 void renderGame(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White background
     SDL_RenderClear(renderer);
@@ -186,6 +202,20 @@ void renderGameColored(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
     SDL_RenderPresent(renderer);
 }
 
+void renderGameOverScreen(SDL_Renderer* renderer, int score, int highScore) {
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White background
+    SDL_RenderClear(renderer);
+
+    // Draw a simple "game over" rectangle
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Black box
+    SDL_FRect box = {200, 100, 400, 200};
+    SDL_RenderFillRect(renderer, &box);
+
+    //placeholder sdl_ttf stuff
+
+    SDL_RenderPresent(renderer);
+}
+
 int main(int argc, char *argv[])
 {
     printf("SDL version: %d.%d.%d\n", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION); 
@@ -202,6 +232,7 @@ int main(int argc, char *argv[])
         return 1;
     }
 
+    GameState gameState = GAME_RUNNING;
     Dinosaur dino;
     Obstacle obs;
     srand((unsigned int)time(NULL));
@@ -215,7 +246,19 @@ int main(int argc, char *argv[])
             if (event.type == SDL_EVENT_QUIT) {
                 running = false;
             }
-            handleInput(&event, &dino);
+            if (gameState == GAME_RUNNING) {
+                handleInput(&event, &dino);
+            } else if (gameState == GAME_OVER) {
+                if (event.type == SDL_EVENT_KEY_DOWN) 
+                {
+                    // Reset game
+                    initGame(&dino, &obs);
+                    score = 0;
+                    scoreTimer = 0;
+                    obstacleSpeed = 5.0f;
+                    gameState = GAME_RUNNING;
+                }
+            }
         }
 
         updateGame(&dino, &obs);
@@ -225,9 +268,10 @@ int main(int argc, char *argv[])
             if (score > highScore) {
                 highScore = score;
             }
-            score = 0;
+            gameState=GAME_OVER;
+            /*score = 0;
             scoreTimer = 0;
-            initGame(&dino, &obs);
+            initGame(&dino, &obs);*/
         }
 
         scoreTimer++;
@@ -236,18 +280,20 @@ int main(int argc, char *argv[])
         scoreTimer = 0;
         }
         
-        obstacleSpeed = 5.0f + (score / 200.0f); //increases speed for every 200 pts, adjust 200.0f to modify speed
+        obstacleSpeed = 5.0f + 2.0f*(score / 100.0f); //increases speed for every 100 pts, adjust 100.0f to modify speed
         if (obstacleSpeed > 100.0f)
                 obstacleSpeed = 100.0f;
 
-        if (score%700==0)
-            tempscore=score;
-        if (score>=10000 && score<11000)
+        if (gameState == GAME_RUNNING)
         {
-            renderGameColored(renderer, &dino, &obs);
-        }
-        else
-        {
+            if (score%700==0)
+                tempscore=score;
+            if (score>=10000 && score<11000)
+            {
+                renderGameColored(renderer, &dino, &obs);
+            }
+            else
+            {
             if (score<tempscore+700)
             {
                 if(tempscore%1400==0)
@@ -256,6 +302,9 @@ int main(int argc, char *argv[])
                     renderGameReversed(renderer, &dino, &obs);
             }
         }
+        }
+        else if (gameState == GAME_OVER) {
+        renderGameOverScreen(renderer, score, highScore); }
 
         SDL_Delay(16); // ~60 FPS
     }

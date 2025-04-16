@@ -1,13 +1,13 @@
-Add a score counter 1*
+Add a displayable score counter 2*
 
 Obs array 5
 
-Create a game over screen 3*
+Create a game over screen 1*
 
 Improve graphics (add texture to sky, ground) 7
 
 Start game screen 4
 
-Save high scores between runs (file I/O) 2*
+Save high scores between runs (file I/O) 3*
 
 Multiplayer 6
