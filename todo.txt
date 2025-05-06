@@ -1,13 +1,7 @@
-Add a displayable score counter 2*
+make bg move with player
 
-Obs array 5
+Obs array 
 
-Create a game over screen 1*
+Save high scores between runs (file I/O) 
 
-Improve graphics (add texture to sky, ground) 7
-
-Start game screen 4
-
-Save high scores between runs (file I/O) 3*
-
-Multiplayer 6
+Multiplayer 
