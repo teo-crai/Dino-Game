@@ -54,16 +54,17 @@ void initGame(Dinosaur *dino, Obstacle *obs) {
     obs->type = (ObstacleType)type;
     if (obs->type == OBSTACLE_CACTUS) 
     {
-        obs->width = 20;
-        obs->height = 50 + rand() % 30; // 50–80 tall
+        obs->width = 75;
+        obs->height = 60 + rand() % 30; 
+        obs->y = GROUND_Y - obs->height;
     } 
     else 
     {
-        obs->width = 40 + rand() % 30; // 40–70 wide
-        obs->height = 20 + rand() % 10; // 20–30 tall
+        obs->width = 100 + rand() % 30; 
+        obs->height = 80 + rand() % 10;
+        obs->y = GROUND_Y - obs->height + 37;
     }
 
-    obs->y = GROUND_Y - obs->height;
     obs->active = true;
 }
 
@@ -100,15 +101,17 @@ void updateGame(Dinosaur *dino, Obstacle *obs) {
         obs->type = (ObstacleType)type;
         if (obs->type == OBSTACLE_CACTUS) 
         {
-            obs->width = 20;
-            obs->height = 50 + rand() % 30;
+            obs->width = 75;
+            obs->height = 60 + rand() % 30;
+            obs->y = GROUND_Y - obs->height;
         } 
         else 
         {
-            obs->width = 40 + rand() % 30;
-            obs->height = 20 + rand() % 10;
+            obs->width = 100 + rand() % 30; 
+            obs->height = 80 + rand() % 10;
+            obs->y = GROUND_Y - obs->height + 37; 
         }
-        obs->y = GROUND_Y - obs->height;
+        
     }
 }
 
@@ -192,7 +195,7 @@ void renderGame(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs,
     SDL_RenderFillRect(renderer, &groundRect);
 
     // Draw dinosaur
-    SDL_FRect dinoRect = {dino->x, dino->y, 50, 50};
+    SDL_FRect dinoRect = {dino->x, dino->y-25, 100, 100};
     SDL_RenderTexture(renderer, dinoTexture, NULL, &dinoRect);
 
     // Draw obstacle
