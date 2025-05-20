@@ -19,6 +19,7 @@ int scoreTimer = 0;
 long long tempscore=0;
 float obstacleSpeed = 5.0f;
 TTF_Font* font = NULL;
+TTF_Font* small_font = NULL;
 
 typedef struct {
     float x, y;
@@ -163,7 +164,11 @@ void renderStartScreen(SDL_Renderer* renderer, TTF_Font* font, SDL_FRect* single
     SDL_RenderFillRect(renderer, singleBtn);
     SDL_Surface* singleSurf = TTF_RenderText_Solid(font, "SINGLEPLAYER", 12, textColor);
     SDL_Texture* singleTex = SDL_CreateTextureFromSurface(renderer, singleSurf);
-    SDL_FRect singleTextRect = {singleBtn->x + 60, singleBtn->y + 15, singleSurf->w, singleSurf->h};
+    SDL_FRect singleTextRect = {
+        singleBtn->x + (singleBtn->w - singleSurf->w) / 2.0f,
+        singleBtn->y + (singleBtn->h - singleSurf->h) / 2.0f,
+        singleSurf->w, singleSurf->h
+    };
     SDL_RenderTexture(renderer, singleTex, NULL, &singleTextRect);
     SDL_DestroyTexture(singleTex);
     SDL_DestroySurface(singleSurf);
@@ -174,7 +179,11 @@ void renderStartScreen(SDL_Renderer* renderer, TTF_Font* font, SDL_FRect* single
     SDL_RenderFillRect(renderer, multiBtn);
     SDL_Surface* multiSurf = TTF_RenderText_Solid(font, "MULTIPLAYER", 11, textColor);
     SDL_Texture* multiTex = SDL_CreateTextureFromSurface(renderer, multiSurf);
-    SDL_FRect multiTextRect = {multiBtn->x + 70, multiBtn->y + 15, multiSurf->w, multiSurf->h};
+    SDL_FRect multiTextRect = {
+        multiBtn->x + (multiBtn->w - multiSurf->w) / 2.0f,
+        multiBtn->y + (multiBtn->h - multiSurf->h) / 2.0f,
+        multiSurf->w, multiSurf->h
+    };
     SDL_RenderTexture(renderer, multiTex, NULL, &multiTextRect);
     SDL_DestroyTexture(multiTex);
     SDL_DestroySurface(multiSurf);
@@ -311,7 +320,7 @@ void renderGameColored(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs) {
     SDL_RenderPresent(renderer);
 }
 
-void renderGameOverScreen(SDL_Renderer* renderer, TTF_Font* font, int score, int highScore) {
+void renderGameOverScreen(SDL_Renderer* renderer, TTF_Font* font, TTF_Font* small_font, int score, int highScore) {
     SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255); // White background
     SDL_RenderClear(renderer);
 
@@ -328,7 +337,11 @@ void renderGameOverScreen(SDL_Renderer* renderer, TTF_Font* font, int score, int
     snprintf(buffer, sizeof(buffer), "SCORE: %05d", score);
     SDL_Surface* scoreSurf = TTF_RenderText_Solid(font, buffer, strlen(buffer), textColor);
     SDL_Texture* scoreTex = SDL_CreateTextureFromSurface(renderer, scoreSurf);
-    SDL_FRect scoreRect = { box.x + 100, box.y + 30, scoreSurf->w, scoreSurf->h };
+    SDL_FRect scoreRect = {
+        box.x + (box.w - scoreSurf->w) / 2.0f,
+        box.y + 30,
+        scoreSurf->w, scoreSurf->h
+    };
     SDL_RenderTexture(renderer, scoreTex, NULL, &scoreRect);
     SDL_DestroyTexture(scoreTex);
     SDL_DestroySurface(scoreSurf);
@@ -337,16 +350,24 @@ void renderGameOverScreen(SDL_Renderer* renderer, TTF_Font* font, int score, int
     snprintf(buffer, sizeof(buffer), "HI: %05d", highScore);
     SDL_Surface* highSurf = TTF_RenderText_Solid(font, buffer, strlen(buffer), textColor);
     SDL_Texture* highTex = SDL_CreateTextureFromSurface(renderer, highSurf);
-    SDL_FRect highRect = { box.x + 100, box.y + 70, highSurf->w, highSurf->h };
+    SDL_FRect highRect = {
+        box.x + (box.w - highSurf->w) / 2.0f,
+        box.y + 70,
+        highSurf->w, highSurf->h
+    };
     SDL_RenderTexture(renderer, highTex, NULL, &highRect);
     SDL_DestroyTexture(highTex);
     SDL_DestroySurface(highSurf);
 
     // Restart message
     snprintf(buffer, sizeof(buffer), "Press any key to restart.");
-    SDL_Surface* msgSurf = TTF_RenderText_Solid(font, buffer, strlen(buffer), textColor);
+    SDL_Surface* msgSurf = TTF_RenderText_Solid(small_font, buffer, strlen(buffer), textColor);
     SDL_Texture* msgTex = SDL_CreateTextureFromSurface(renderer, msgSurf);
-    SDL_FRect msgRect = { box.x + 50, box.y + 130, msgSurf->w, msgSurf->h };
+    SDL_FRect msgRect = {
+        box.x + (box.w - msgSurf->w) / 2.0f,
+        box.y + 130,
+        msgSurf->w, msgSurf->h
+    };
     SDL_RenderTexture(renderer, msgTex, NULL, &msgRect);
     SDL_DestroyTexture(msgTex);
     SDL_DestroySurface(msgSurf);
@@ -369,6 +390,7 @@ int main(int argc, char *argv[]) {
     }
 
     font = TTF_OpenFont("arial.ttf", 24);
+    small_font = TTF_OpenFont("arial.ttf", 16);
     if (!font) {
         SDL_Log("Failed to load font: %s", SDL_GetError());
         return 1;
@@ -477,7 +499,7 @@ int main(int argc, char *argv[]) {
                 }
             }
         } else if (gameState == GAME_OVER) {
-            renderGameOverScreen(renderer, font, score, highScore);
+            renderGameOverScreen(renderer, font, small_font, score, highScore);
         }
 
         SDL_Delay(16); // ~60 FPS
