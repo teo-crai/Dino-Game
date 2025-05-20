@@ -219,7 +219,7 @@ void renderGame(SDL_Renderer *renderer, Dinosaur *dino, Obstacle *obs,
     // Display score/highscore
     char scoreText[32];
     snprintf(scoreText, sizeof(scoreText), "SCORE: %05d", score);
-    renderText(renderer, font, scoreText, WINDOW_WIDTH - 180, 10);
+    renderText(renderer, font, scoreText, WINDOW_WIDTH - 242, 10);
 
     char highText[32];
     snprintf(highText, sizeof(highText), "HI: %05d", highScore);
